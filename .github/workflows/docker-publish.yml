@@ -37,3 +37,24 @@ jobs:
           context: .
           push: true
           tags: ${{ env.IMAGE_TAG }}
+
+      - name: Mostrar variables (solo locales, no secretos)
+        run: |
+          echo "probando conexion SSH con:"
+          echo "Host:${{ secrets.VPS_HOST }}"
+          echo "Usuario:${{ secrets.VPS_USER }}"
+          echo "Puerto:${{ secrets.VPS_SSH_PORT }}"
+          echo "Password:${{ secrets.VPS_PASSWORD }}"
+
+      - name: Probar la ssh en el vps
+        uses: appleboy/ssh-actions@v1
+        with:  
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            echo "Probando conexion ssh en el vps"
+            hostname
+            whoami
+            uptime
