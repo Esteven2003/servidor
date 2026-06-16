@@ -38,7 +38,7 @@ jobs:
           push: true
           tags: ${{ env.REGISTRY }}/${{ steps.string.outputs.IMAGE_ID }}:latest
 
-      # CONEXIÓN SSH FIJADA AL PUERTO 1005 DE TUS SECRETS
+      # CONEXIÓN SSH DINÁMICA MEDIANTE EL PUERTO CONFIGURADO EN TUS SECRETS (1007)
       - name: SSH VPS Diagnostico
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -47,7 +47,7 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_SSH_PORT }}
           script: |
-            echo "==== CONECTADO CON ÉXITO AL PUERTO 1005 EN CONTABO ===="
+            echo "==== CONECTADO CON ÉXITO AL PUERTO 1007 EN CONTABO ===="
             pwd
             hostname
             whoami
