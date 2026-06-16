@@ -1,8 +1,12 @@
-name: Publicar Docker en GitHub
+name: reloj steven
 
 on:
   push:
     branches: [ "main" ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-push:
@@ -12,42 +16,39 @@ jobs:
       packages: write
 
     steps:
-      - name: Descargar código
+      - name: Descargar codigo
         uses: actions/checkout@v4
 
-      - name: Iniciar sesión en GitHub Container Registry
+      - name: Login GHCR
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # ESTE PASO FUERZA A MINÚSCULAS TANTO EL USUARIO COMO EL REPOSITORIO
-      - name: Configurar nombre de imagen en minusculas
+      # ESTE ES TU FORMATEADOR EN MINÚSCULAS
+      - name: Formatear nombre
         id: string
-        run: |
-          USER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          REPO_LOWER=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
-          echo "IMAGE_TAG=ghcr.io/${USER_LOWER}/${REPO_LOWER}:latest" >> $GITHUB_ENV
+        run: echo "IMAGE_ID=$(echo ${{ env.IMAGE_NAME }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
-      # USAMOS EL VALOR YA CONFIGURADO EN EL PASO ANTERIOR
-      - name: Construir y subir imagen Docker
+      - name: Build y Push image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ${{ env.IMAGE_TAG }}
+          tags: ${{ env.REGISTRY }}/${{ steps.string.outputs.IMAGE_ID }}:latest
 
-      # CONEXIÓN SSH ADAPTADA AL PUERTO 1005 DESDE LAS SECRETS
-      - name: Probar la ssh en el vps
-        uses: appleboy/ssh-action@v1
+      # CONEXIÓN SSH FIJADA AL PUERTO 1005 DE TUS SECRETS
+      - name: SSH VPS Diagnostico
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_SSH_PORT }}
           script: |
-            echo "¡Conexión SSH exitosa en el VPS usando el puerto 1005!"
+            echo "==== CONECTADO CON ÉXITO AL PUERTO 1005 EN CONTABO ===="
+            pwd
             hostname
             whoami
             uptime
