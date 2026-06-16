@@ -30,7 +30,6 @@ jobs:
           REPO_LOWER=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
           echo "IMAGE_TAG=ghcr.io/${USER_LOWER}/${REPO_LOWER}:latest" >> $GITHUB_ENV
 
-          
       # USAMOS EL VALOR YA CONFIGURADO EN EL PASO ANTERIOR
       - name: Construir y subir imagen Docker
         uses: docker/build-push-action@v5
@@ -39,25 +38,16 @@ jobs:
           push: true
           tags: ${{ env.IMAGE_TAG }}
 
-
-      - name: Mostrar variables (solo locales, no secretos)
-        run: |
-          echo "probando conexion SSH con:"
-          echo "Host:${{ secrets.VPS_HOST }}"
-          echo "Usuario:${{ secrets.VPS_USER }}"
-          echo "Puerto:${{ secrets.VPS_SSH_PORT }}"
-          echo "Password:${{ secrets.VPS_PASSWORD }}"
-
-
+      # CONEXIÓN SSH CORREGIDA Y ALINEADA A LA PERFECCIÓN
       - name: Probar la ssh en el vps
         uses: appleboy/ssh-action@v1
-        with:  
+        with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_SSH_PORT }}
           script: |
-            echo "Probando conexion ssh en el vps"
+            echo "Conexión SSH exitosa en el VPS"
             hostname
             whoami
             uptime
