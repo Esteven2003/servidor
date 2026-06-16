@@ -47,7 +47,7 @@ jobs:
           echo "Password:${{ secrets.VPS_PASSWORD }}"
 
       - name: Probar la ssh en el vps
-        uses: appleboy/ssh-actions@v1
+        uses: appleboy/ssh-action@v1
         with:  
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
