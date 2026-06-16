@@ -38,7 +38,7 @@ jobs:
           push: true
           tags: ${{ env.IMAGE_TAG }}
 
-      # CONEXIÓN SSH DIRECTA AL PUERTO 22
+      # CONEXIÓN SSH ADAPTADA AL PUERTO 1005 DESDE LAS SECRETS
       - name: Probar la ssh en el vps
         uses: appleboy/ssh-action@v1
         with:
@@ -47,7 +47,7 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_SSH_PORT }}
           script: |
-            echo "¡Conexión SSH exitosa con el usuario de Contabo!"
+            echo "¡Conexión SSH exitosa en el VPS usando el puerto 1005!"
             hostname
             whoami
             uptime
