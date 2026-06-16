@@ -46,6 +46,7 @@ jobs:
           echo "Puerto:${{ secrets.VPS_SSH_PORT }}"
           echo "Password:${{ secrets.VPS_PASSWORD }}"
 
+          
       - name: Probar la ssh en el vps
         uses: appleboy/ssh-action@v1
         with:  
