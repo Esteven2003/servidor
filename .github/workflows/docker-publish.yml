@@ -1,54 +1,119 @@
-name: reloj steven
+name: Publicar Docker en GitHub
+
+
 
 on:
+
   push:
+
     branches: [ "main" ]
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+
 
 jobs:
+
   build-and-push:
+
     runs-on: ubuntu-latest
+
     permissions:
+
       contents: read
+
       packages: write
 
+
+
     steps:
-      - name: Descargar codigo
+
+      - name: Descargar código
+
         uses: actions/checkout@v4
 
-      - name: Login GHCR
+
+
+      - name: Iniciar sesión en GitHub Container Registry
+
         uses: docker/login-action@v3
+
         with:
-          registry: ${{ env.REGISTRY }}
+
+          registry: ghcr.io
+
           username: ${{ github.actor }}
+
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # ESTE ES TU FORMATEADOR EN MINÚSCULAS
-      - name: Formatear nombre
+
+
+      # ESTE PASO FUERZA A MINÚSCULAS TANTO EL USUARIO COMO EL REPOSITORIO
+
+      - name: Configurar nombre de imagen en minusculas
+
         id: string
-        run: echo "IMAGE_ID=$(echo ${{ env.IMAGE_NAME }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
-      - name: Build y Push image
+        run: |
+
+          USER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+
+          REPO_LOWER=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
+
+          echo "IMAGE_TAG=ghcr.io/${USER_LOWER}/${REPO_LOWER}:latest" >> $GITHUB_ENV
+
+
+
+      # USAMOS EL VALOR YA CONFIGURADO EN EL PASO ANTERIOR
+
+      - name: Construir y subir imagen Docker
+
         uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ steps.string.outputs.IMAGE_ID }}:latest
 
-      # CONEXIÓN SSH DINÁMICA MEDIANTE EL PUERTO CONFIGURADO EN TUS SECRETS (1007)
-      - name: SSH VPS Diagnostico
-        uses: appleboy/ssh-action@v1.0.3
         with:
+
+          context: .
+
+          push: true
+
+          tags: ${{ env.IMAGE_TAG }}
+
+
+
+      - name: Mostrar variables (solo locales, no secretos)
+
+        run: |
+
+          echo "probando conexion SSH con:"
+
+          echo "Host:${{ secrets.VPS_HOST }}"
+
+          echo "Usuario:${{ secrets.VPS_USER }}"
+
+          echo "Puerto:${{ secrets.VPS_SSH_PORT }}"
+
+          echo "Password:${{ secrets.VPS_PASSWORD }}"
+
+
+
+      - name: Probar la ssh en el vps
+
+        uses: appleboy/ssh-action@v1
+
+        with:  
+
           host: ${{ secrets.VPS_HOST }}
+
           username: ${{ secrets.VPS_USER }}
+
           password: ${{ secrets.VPS_PASSWORD }}
+
           port: ${{ secrets.VPS_SSH_PORT }}
+
           script: |
-            echo "==== CONECTADO CON ÉXITO AL PUERTO 1007 EN CONTABO ===="
-            pwd
+
+            echo "Probando conexion ssh en el vps"
+
             hostname
+
             whoami
+
             uptime
