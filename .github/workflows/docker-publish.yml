@@ -112,8 +112,4 @@ jobs:
 
             echo "Probando conexion ssh en el vps"
 
-            hostname
-
-            whoami
-
-            uptime
+            touch quintoa.txt
