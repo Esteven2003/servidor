@@ -27,7 +27,7 @@ services:
         - "traefik.http.routers.servidor-secure.tls.certresolver=http"
         - "traefik.http.routers.servidor-secure.service=servidor"
         # 2. PUERTO: Cambia '5000' por el puerto en el que escucha tu app dentro del contenedor (ej: 3000, 80, etc.)
-        - "traefik.http.services.servidor.loadbalancer.server.port=1003"
+        - "traefik.http.services.servidor.loadbalancer.server.port=5000"
         - "traefik.docker.network=traefik-public"
 
 networks:
