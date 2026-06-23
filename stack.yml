@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  pagina: 
+  menu: 
     # Imagen configurada exactamente en minúsculas como la sube tu GitHub Actions
     image: ghcr.io/esteven2003/servidor:latest
     networks:
@@ -15,19 +15,19 @@ services:
         condition: on-failure
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.servidor.entrypoints=http"
+        - "traefik.http.routers.menu.entrypoints=http"
         # 1. DOMINIO: Cambia 'tu-dominio.com' por el dominio real que apunte a tu VPS
-        - "traefik.http.routers.servidor.rule=Host(`menu.byronrm.com`)"
-        - "traefik.http.middlewares.servidor-https-redirect.redirectscheme.scheme=https"
-        - "traefik.http.routers.servidor.middlewares=servidor-https-redirect"
-        - "traefik.http.routers.servidor-secure.entrypoints=https"
+        - "traefik.http.routers.menu.rule=Host(`menu.byronrm.com`)"
+        - "traefik.http.middlewares.menu-https-redirect.redirectscheme.scheme=https"
+        - "traefik.http.routers.menu.middlewares=menu-https-redirect"
+        - "traefik.http.routers.menu-secure.entrypoints=https"
         # 1. DOMINIO: Pon aquí también tu dominio real
-        - "traefik.http.routers.servidor-secure.rule=Host(`menu.byronrm.com`)"
-        - "traefik.http.routers.servidor-secure.tls=true"
-        - "traefik.http.routers.servidor-secure.tls.certresolver=http"
-        - "traefik.http.routers.servidor-secure.service=servidor"
+        - "traefik.http.routers.menu-secure.rule=Host(`menu.byronrm.com`)"
+        - "traefik.http.routers.menu-secure.tls=true"
+        - "traefik.http.routers.menu-secure.tls.certresolver=http"
+        - "traefik.http.routers.menu-secure.service=menu"
         # 2. PUERTO: Cambia '5000' por el puerto en el que escucha tu app dentro del contenedor (ej: 3000, 80, etc.)
-        - "traefik.http.services.servidor.loadbalancer.server.port=5000"
+        - "traefik.http.services.menu.loadbalancer.server.port=5000"
         - "traefik.docker.network=traefik-public"
 
 networks:
