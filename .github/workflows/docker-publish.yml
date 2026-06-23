@@ -4,66 +4,91 @@ on:
   push:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
 
     steps:
-      - name: Descargar código
-        uses: actions/checkout@v4
+    - name: Descargar código
+      uses: actions/checkout@v4
 
-      - name: Iniciar sesión en GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Configurar nombre de imagen en minusculas
+      id: string
+      run: |
+        USER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+        REPO_LOWER=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
+        echo "IMAGE_TAG=ghcr.io/${USER_LOWER}/${REPO_LOWER}:latest" >> $GITHUB_ENV
 
-      # ESTE PASO FUERZA A MINÚSCULAS TANTO EL USUARIO COMO EL REPOSITORIO
-      - name: Configurar nombre de imagen en minusculas
-        id: string
-        run: |
-          USER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          REPO_LOWER=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
-          echo "IMAGE_TAG=ghcr.io/${USER_LOWER}/${REPO_LOWER}:latest" >> $GITHUB_ENV
+    - name: 🔐 Iniciar sesión en GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
-      # USAMOS EL VALOR YA CONFIGURADO EN EL PASO ANTERIOR
-      - name: Construir y subir imagen Docker
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: ${{ env.IMAGE_TAG }}
+    - name: 🏗️ Construir y subir imagen Docker
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        push: true
+        tags: ${{ env.IMAGE_TAG }}
 
-      - name: Mostrar variables (solo locales, no secretos)
-        run: |
-          echo "probando conexion SSH con:"
-          echo "Host:${{ secrets.VPS_HOST }}"
-          echo "Usuario:${{ secrets.VPS_USER }}"
-          echo "Puerto:${{ secrets.VPS_SSH_PORT }}"
-          echo "Password:${{ secrets.VPS_PASSWORD }}"
+    - name: 🧾 Mostrar variables básicas (solo locales, no secretos)
+      run: |
+        echo "Probando conexión SSH con:"
+        echo "Host: ${{ secrets.VPS_HOST }}"
+        echo "Usuario: ${{ secrets.VPS_USER }}"
+        echo "Puerto: ${{ secrets.VPS_SSH_PORT }}"
 
-      - name: Probar la ssh en el vps
-        uses: appleboy/ssh-action@v1
-        with:  
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
-          script: |
-            echo "Probando conexion ssh en el vps"
-            touch quinto.txt
-      
-      # CORREGIDO: Se cambia a scp-action para permitir la transferencia de archivos
-      - name: Pasar archivos desde git a scp
-        uses: appleboy/scp-action@v1
-        with:  
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SSH_PORT }}
-          source: "stack.yml,Makefile"
-          target: "/home/${{ secrets.VPS_USER }}/landinga"
+    - name: 🧪 Probar conexión SSH
+      uses: appleboy/ssh-action@v1
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        password: ${{ secrets.VPS_PASSWORD }}
+        port: ${{ secrets.VPS_SSH_PORT }}
+        script: |
+          echo "✅ Conexión exitosa desde GitHub Actions"
+          hostname
+          whoami
+          uptime
+        
+    - name: Pasar el stack.yml y Makefile al servidor
+      uses: appleboy/scp-action@v1
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        password: ${{ secrets.VPS_PASSWORD }}
+        port: ${{ secrets.VPS_SSH_PORT }}
+        source: "stack.yml,Makefile"
+        target: "/home/${{ secrets.VPS_USER }}/landinga"
+    
+    - name: Despliegue de los servicios
+      uses: appleboy/ssh-action@v1
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        password: ${{ secrets.VPS_PASSWORD }}
+        port: ${{ secrets.VPS_SSH_PORT }}
+        script: |
+          echo "✅ Desplegando servicios"        
+          cd ~/landinga
+
+          # Paso 1: Descargar la imagen actualizada del registro
+          
+          echo "==> descargando la imagen del GHCR"
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker pull ${{ env.IMAGE_TAG }}
+
+          # EL PASO 2 HA SIDO ELIMINADO PARA EVITAR QUE SE BORREN TUS CONTENEDORES
+
+          # Paso 3: Desplegar/Actualizar el stack de forma segura
+
+          echo "==> Desplegando stack..."
+          docker stack deploy -c stack.yml --with-registry-auth servidor
+
+          docker ps

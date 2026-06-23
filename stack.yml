@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  paginae.v: 
+    # Imagen configurada exactamente en minúsculas como la sube tu GitHub Actions
+    image: ghcr.io/Esteven2003/servidor:latest
+    networks:
+      - traefik-public
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.servidor.entrypoints=http"
+        # 1. DOMINIO: Cambia 'tu-dominio.com' por el dominio real que apunte a tu VPS
+        - "traefik.http.routers.servidor.rule=Host(`tu-dominio.com`)"
+        - "traefik.http.middlewares.servidor-https-redirect.redirectscheme.scheme=https"
+        - "traefik.http.routers.servidor.middlewares=servidor-https-redirect"
+        - "traefik.http.routers.servidor-secure.entrypoints=https"
+        # 1. DOMINIO: Pon aquí también tu dominio real
+        - "traefik.http.routers.servidor-secure.rule=Host(`tu-dominio.com`)"
+        - "traefik.http.routers.servidor-secure.tls=true"
+        - "traefik.http.routers.servidor-secure.tls.certresolver=http"
+        - "traefik.http.routers.servidor-secure.service=servidor"
+        # 2. PUERTO: Cambia '5000' por el puerto en el que escucha tu app dentro del contenedor (ej: 3000, 80, etc.)
+        - "traefik.http.services.servidor.loadbalancer.server.port=1003"
+        - "traefik.docker.network=traefik-public"
+
+networks:
+  traefik-public:
+    external: true
