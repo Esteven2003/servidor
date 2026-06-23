@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  paginae.v: 
+  pagina: 
     # Imagen configurada exactamente en minúsculas como la sube tu GitHub Actions
     image: ghcr.io/Esteven2003/servidor:latest
     networks:
@@ -17,12 +17,12 @@ services:
         - "traefik.enable=true"
         - "traefik.http.routers.servidor.entrypoints=http"
         # 1. DOMINIO: Cambia 'tu-dominio.com' por el dominio real que apunte a tu VPS
-        - "traefik.http.routers.servidor.rule=Host(`menu.byrorm.com`)"
+        - "traefik.http.routers.servidor.rule=Host(`menu.byronrm.com`)"
         - "traefik.http.middlewares.servidor-https-redirect.redirectscheme.scheme=https"
         - "traefik.http.routers.servidor.middlewares=servidor-https-redirect"
         - "traefik.http.routers.servidor-secure.entrypoints=https"
         # 1. DOMINIO: Pon aquí también tu dominio real
-        - "traefik.http.routers.servidor-secure.rule=Host(`menu.byrorm.com`)"
+        - "traefik.http.routers.servidor-secure.rule=Host(`menu.byronrm.com`)"
         - "traefik.http.routers.servidor-secure.tls=true"
         - "traefik.http.routers.servidor-secure.tls.certresolver=http"
         - "traefik.http.routers.servidor-secure.service=servidor"
