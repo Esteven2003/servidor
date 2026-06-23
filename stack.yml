@@ -3,7 +3,7 @@ version: '3.8'
 services:
   pagina: 
     # Imagen configurada exactamente en minúsculas como la sube tu GitHub Actions
-    image: ghcr.io/Esteven2003/servidor:latest
+    image: ghcr.io/esteven2003/servidor:latest
     networks:
       - traefik-public
     deploy:
